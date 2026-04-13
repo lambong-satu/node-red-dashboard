@@ -1,0 +1,378 @@
+[
+    {
+        "id": "f1a1b1c1d1e1f1a1",
+        "type": "tab",
+        "label": "ThingSpeak Dashboard",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "inject_refresh",
+        "type": "inject",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Refresh every 5s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "http_thingspeak_last"
+            ]
+        ]
+    },
+    {
+        "id": "http_thingspeak_last",
+        "type": "http request",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Read ThingSpeak Last Feed",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.thingspeak.com/channels/2872120/feeds/last.json?api_key=LG9HEOE7LMVKA5FE",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 410,
+        "y": 100,
+        "wires": [
+            [
+                "json_parse"
+            ]
+        ]
+    },
+    {
+        "id": "json_parse",
+        "type": "json",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 610,
+        "y": 100,
+        "wires": [
+            [
+                "fn_extract_values"
+            ]
+        ]
+    },
+    {
+        "id": "fn_extract_values",
+        "type": "function",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Extract Temp / Humidity / LUX",
+        "func": "let temp = parseFloat(msg.payload.field1);\nlet hum = parseFloat(msg.payload.field2);\nlet lux = parseFloat(msg.payload.field3);\n\nreturn [\n    { payload: temp, topic: \"Temperature\" },\n    { payload: hum, topic: \"Humidity\" },\n    { payload: lux, topic: \"LUX\" }\n];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 100,
+        "wires": [
+            [
+                "ui_gauge_temp",
+                "ui_chart_temp",
+                "b16b27a1607ebd2c"
+            ],
+            [
+                "ui_gauge_hum",
+                "ui_chart_hum",
+                "b16b27a1607ebd2c"
+            ],
+            [
+                "ui_template_lux",
+                "ui_chart_lux",
+                "b16b27a1607ebd2c"
+            ]
+        ]
+    },
+    {
+        "id": "ui_gauge_temp",
+        "type": "ui_gauge",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Temperature Gauge",
+        "group": "ui_group_temp",
+        "order": 1,
+        "width": 6,
+        "height": 6,
+        "gtype": "gage",
+        "title": "Temperature",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "50",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "20",
+        "seg2": "30",
+        "className": "",
+        "x": 1130,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "ui_chart_temp",
+        "type": "ui_chart",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Temperature Chart",
+        "group": "ui_group_temp",
+        "order": 2,
+        "width": 18,
+        "height": 6,
+        "label": "Temperature Over Time",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "No data",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "50",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff7f0e",
+            "#aec7e8",
+            "#98df8a",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1130,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ui_template_lux",
+        "type": "ui_template",
+        "z": "f1a1b1c1d1e1f1a1",
+        "group": "ui_group_lux",
+        "name": "LUX Box",
+        "order": 1,
+        "width": 6,
+        "height": 6,
+        "format": "<div style=\"height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:#1e1e1e; border-radius:8px;\">\n    <div style=\"font-size:20px; margin-bottom:10px;\">LUX</div>\n    <div style=\"font-size:36px; font-weight:bold; color:#ffd54f;\">{{msg.payload}} lx</div>\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1120,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ui_chart_lux",
+        "type": "ui_chart",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "LUX Chart",
+        "group": "ui_group_lux",
+        "order": 2,
+        "width": 18,
+        "height": 6,
+        "label": "LUX Over Time",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "No data",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ffd700",
+            "#aec7e8",
+            "#98df8a",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1120,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ui_gauge_hum",
+        "type": "ui_gauge",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Humidity Gauge",
+        "group": "ui_group_hum",
+        "order": 1,
+        "width": 6,
+        "height": 6,
+        "gtype": "gage",
+        "title": "Humidity",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#3b82f6",
+            "#60a5fa",
+            "#93c5fd"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "className": "",
+        "x": 1130,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "ui_chart_hum",
+        "type": "ui_chart",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "Humidity Chart",
+        "group": "ui_group_hum",
+        "order": 2,
+        "width": 18,
+        "height": 6,
+        "label": "Humidity Over Time",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "No data",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "100",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1e90ff",
+            "#aec7e8",
+            "#98df8a",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1130,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b16b27a1607ebd2c",
+        "type": "debug",
+        "z": "f1a1b1c1d1e1f1a1",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "ui_group_temp",
+        "type": "ui_group",
+        "name": "Temperature Row",
+        "tab": "ui_tab_iot_monitoring",
+        "order": 1,
+        "disp": true,
+        "width": "24",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ui_group_lux",
+        "type": "ui_group",
+        "name": "LUX Row",
+        "tab": "ui_tab_iot_monitoring",
+        "order": 2,
+        "disp": true,
+        "width": "24",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ui_group_hum",
+        "type": "ui_group",
+        "name": "Humidity Row",
+        "tab": "ui_tab_iot_monitoring",
+        "order": 3,
+        "disp": true,
+        "width": "24",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ui_tab_iot_monitoring",
+        "type": "ui_tab",
+        "name": "IoT Monitoring Dashboard",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "2d0014655086b23b",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
